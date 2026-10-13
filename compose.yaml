@@ -1,0 +1,44 @@
+services:
+  restaurantservice:
+    build:
+      context: ./restaurantservice
+      dockerfile: Dockerfile
+    image: restaurantservice:latest
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "9999:9999"
+    restart: on-failure
+
+  orderservice:
+    build:
+      context: ./orderservice/orderservice
+      dockerfile: Dockerfile
+    image: orderservice:latest
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8888:8888"
+    restart: on-failure
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: sbdata
+      MYSQL_ROOT_HOST: "%"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -proot --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+volumes:
+  mysql-data:
